@@ -45,15 +45,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         applyProcessing()
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
     @IBAction func save(_ sender: Any) {
     }
-
+    
     @IBAction func changeFilter(_ sender: Any) {
         let ac = UIAlertController(title: "Choose filter", message: nil, preferredStyle: .actionSheet)
         ac.addAction(UIAlertAction(title: "CIBumpDistortion", style: .default, handler: setFilter))
@@ -85,7 +85,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
         
         applyProcessing()
+        
+    }
     
+    @IBAction func save(_ sender: Any) {
+        guard let image = imageView.image else { return }
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
     }
     
     @IBAction func intensityChanged(_ sender: Any) {
@@ -101,10 +106,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         if inputKeys.contains(kCIInputCenterKey) { currentFilter.setValue(CIVector(x: currentImage.size.width / 2, y: currentImage.size.height / 2), forKey: kCIInputCenterKey) }
         
         if let cgimg = context.createCGImage(currentFilter.outputImage!, from: currentFilter.outputImage!.extent) {
-            let processedImage = UIImage(cgImage: cgimg)
-            self.imageView.image = processedImage
+            let processedImage = UIImage(cgImage: cgImage)
+            imageView.image = processedImage
         }
     }
-    
+    @objc func image (_ image: UIImage, didFinishSavingWithError: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            let ac = UIAlertController(title: "Save Error", message: error.localizedDescription, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+        } else {
+            let ac = UIAlertController(title: "Saved", message: "Your altered image has been saved to your photos.", preferredStyle: .alert)
+            present(ac, animated: true)
+        }
+    }
 }
 
